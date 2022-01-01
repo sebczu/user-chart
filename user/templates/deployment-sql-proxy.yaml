@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-sql-proxy-deployment
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: user-sql-proxy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: user-sql-proxy
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-sql-proxy
+          image: "{{ .Values.image.sqlProxy.repository }}:{{ .Values.image.sqlProxy.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: service-port
+              containerPort: 3306
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              echo "STARTED"
+              echo "GCLOUD_SQL_CONNECTION: $GCLOUD_SQL_CONNECTION"
+              /cloud_sql_proxy -instances=$GCLOUD_SQL_CONNECTION=tcp:0.0.0.0:3306 -credential_file=/config/gcloud_credential.json
+          envFrom:
+            - configMapRef:
+                name: {{ .Chart.Name }}-sql-proxy-configmap
+          volumeMounts:
+            - name: {{ .Chart.Name }}-sql-proxy-secret-volume
+              mountPath: /config/
+          resources:
+            requests:
+              cpu: "25m"
+              memory: "50Mi"
+      volumes:
+        - name: {{ .Chart.Name }}-sql-proxy-secret-volume
+          secret:
+            secretName: {{ .Chart.Name }}-sql-proxy-secret

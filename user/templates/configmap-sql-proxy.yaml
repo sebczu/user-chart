@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-sql-proxy-configmap
+  namespace: {{ .Values.namespace }}
+data:
+  GCLOUD_SQL_CONNECTION: "{{ .Values.gcloud.sql.connection }}"

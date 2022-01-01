@@ -1,0 +1,65 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Checkout helm-charts repository
+        uses: actions/checkout@v2.4.0
+        with:
+          repository: sebczu/helm-charts
+          path: helm-charts
+          ref: master
+          fetch-depth: 0
+          token: ${{ secrets.CREDENTIAL_GITHUB }}
+
+      - name: Setup helm
+        uses: azure/setup-helm@v1
+        with:
+          version: '3.7.1'
+
+      - name: Verify Helm package
+        env:
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: |
+          CHART_DIRECTORY=$(echo $REPOSITORY_NAME | cut -f1 -d-)
+          echo "CHART_DIRECTORY: $CHART_DIRECTORY"
+          helm lint $CHART_DIRECTORY/
+
+      - name: Create Helm package
+        env:
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: |
+          CHART_DIRECTORY=$(echo $REPOSITORY_NAME | cut -f1 -d-)
+          echo "CHART_DIRECTORY: $CHART_DIRECTORY"
+          helm package $CHART_DIRECTORY/ --destination helm-charts
+          cd helm-charts
+          echo "HELM CHARTS"
+          ls
+          echo "HELM CHARTS"
+
+      - name: Recreate Helm repository index
+        run: |
+          cd helm-charts
+          helm repo index .
+
+      - name: Push Helm package
+        run: |
+          cd helm-charts
+          git remote set-url origin https://sebczu:${{ secrets.CREDENTIAL_GITHUB }}@github.com/sebczu/helm-charts.git
+          git config --global user.name 'sebczu'
+          git config --global user.email 'dev.sebastian.czubala@gmail.com'
+          git add .
+          git commit -m "Helm chart push"
+          git push -u origin master
+

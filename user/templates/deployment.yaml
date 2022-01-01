@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-deployment
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: user
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: user
+    spec:
+      imagePullSecrets:
+        - name: registry-credential
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}{{ .Values.image.version }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: service-port
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: {{ .Chart.Name }}-configmap
+            - secretRef:
+                name: {{ .Chart.Name }}-secret
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "500Mi"

@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Chart.Name }}-sql-updater-job
+  namespace: {{ .Values.namespace }}
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: registry-credential
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.sqlUpdater.repository }}:{{ .Values.image.sqlUpdater.tag }}{{ .Values.image.version }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Chart.Name }}-configmap
+            - secretRef:
+                name: {{ .Chart.Name }}-secret
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "200Mi"

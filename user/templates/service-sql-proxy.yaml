@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-sql-proxy-service
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Chart.Name }}-sql-proxy
+  ports:
+    - protocol: TCP
+      name: service-port
+      port: 3306
+      targetPort: 3306

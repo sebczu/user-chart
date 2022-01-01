@@ -1,0 +1,22 @@
+namespace: template
+
+image:
+  version: 0.0.1
+  repository: sebczu/personal
+  pullPolicy: Always
+  tag: user-
+  sqlUpdater:
+    repository: sebczu/personal
+    tag: user-sql-updater-
+  sqlProxy:
+    repository: gcr.io/cloudsql-docker/gce-proxy
+    tag: 1.27.1-alpine
+
+database:
+  username: "unknown"
+  password: "unknown"
+
+gcloud:
+  credential: "unknown"
+  sql:
+    connection: "unknown"
